@@ -1,19 +1,20 @@
+// src/users/entities/user.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class Auth {
+export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  username: string;
+  name: string;
+
   @Column({ unique: true })
   email: string;
 
   @Column()
   password: string;
-  @Column({ default: 'user' })
-  role: string;
-  @Column({ default: true })
-  isActive: boolean;
+
+  @Column({ nullable: true }) // Refresh tokenni saqlash uchun
+  refreshToken: string | null;
 }

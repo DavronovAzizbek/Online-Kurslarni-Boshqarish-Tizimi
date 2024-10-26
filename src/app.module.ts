@@ -1,12 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AdminModule } from './admin/admin.module';
 import { CoursesModule } from './courses/courses.module';
-import { ModulesModule } from './modules/modules.module';
-import { LessonsModule } from './lessons/lessons.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { ResultsModule } from './results/results.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -23,10 +21,8 @@ import { ResultsModule } from './results/results.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
-    AdminModule,
+    AuthModule,
     CoursesModule,
-    ModulesModule,
-    LessonsModule,
     AssignmentsModule,
     ResultsModule,
   ],
