@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
 
 export class CreateModuleDto {
   @IsNotEmpty()
@@ -10,5 +10,6 @@ export class CreateModuleDto {
   description: string;
 
   @IsNotEmpty()
+  @IsNumber()
   courseId: number;
 }

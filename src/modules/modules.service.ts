@@ -16,9 +16,10 @@ export class ModuleService {
   ) {}
 
   async create(createModuleDto: CreateModuleDto): Promise<Modules> {
-    const course = await this.courseRepository.findOneBy({
-      id: createModuleDto.courseId,
+    const course = await this.courseRepository.findOne({
+      where: { id: createModuleDto.courseId },
     });
+
     if (!course) {
       throw new NotFoundException(
         `Course with ID ${createModuleDto.courseId} not found`,
@@ -34,35 +35,42 @@ export class ModuleService {
   }
 
   async findAll(): Promise<Modules[]> {
-    return this.moduleRepository.find({ relations: ['course', 'lessons'] });
+    return this.moduleRepository.find({
+      relations: ['course', 'lessons', 'assignments'],
+    });
   }
 
   async findOne(id: number): Promise<Modules> {
     const module = await this.moduleRepository.findOne({
       where: { id },
-      relations: ['course', 'lessons'],
+      relations: ['course', 'lessons', 'assignments'],
     });
+
     if (!module) {
       throw new NotFoundException(`Module with ID ${id} not found`);
     }
+
     return module;
   }
 
   async update(id: number, updateModuleDto: UpdateModuleDto): Promise<Modules> {
-    const module = await this.moduleRepository.findOneBy({ id });
+    const module = await this.moduleRepository.findOne({ where: { id } });
+
     if (!module) {
       throw new NotFoundException(`Module with ID ${id} not found`);
     }
 
     if (updateModuleDto.courseId) {
-      const course = await this.courseRepository.findOneBy({
-        id: updateModuleDto.courseId,
+      const course = await this.courseRepository.findOne({
+        where: { id: updateModuleDto.courseId },
       });
+
       if (!course) {
         throw new NotFoundException(
           `Course with ID ${updateModuleDto.courseId} not found`,
         );
       }
+
       module.course = course;
     }
 

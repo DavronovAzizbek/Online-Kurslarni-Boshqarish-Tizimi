@@ -51,4 +51,15 @@ export class LessonService {
     const lesson = await this.findOne(id);
     await this.lessonRepository.remove(lesson);
   }
+
+  async findLessonsByModule(moduleId: number): Promise<Lesson[]> {
+    const lessons = await this.lessonRepository.find({
+      where: { module: { id: moduleId } },
+    });
+
+    if (!lessons.length) {
+      throw new NotFoundException(`No lessons found for module ID ${moduleId}`);
+    }
+    return lessons;
+  }
 }

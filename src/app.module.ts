@@ -14,6 +14,7 @@ import { Lesson } from './lessons/entities/lesson.entity';
 import { Modules } from './modules/entities/module.entity';
 import { Assignment } from './assignments/entities/assignment.entity';
 import { Result } from './results/entities/result.entity';
+import { ModulesModule } from './modules/modules.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { Result } from './results/entities/result.entity';
     ResultsModule,
     UsersModule,
     EnrollmentModule,
+    ModulesModule,
   ],
   controllers: [],
   providers: [],

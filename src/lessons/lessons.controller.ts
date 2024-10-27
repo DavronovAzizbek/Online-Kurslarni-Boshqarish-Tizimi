@@ -49,4 +49,11 @@ export class LessonController {
   async remove(@Param('id') id: string): Promise<void> {
     return this.lessonService.remove(+id);
   }
+
+  @Get('/modules/:moduleId/lessons')
+  async findLessonsByModule(
+    @Param('moduleId') moduleId: string,
+  ): Promise<Lesson[]> {
+    return this.lessonService.findLessonsByModule(+moduleId);
+  }
 }

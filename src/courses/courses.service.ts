@@ -17,7 +17,7 @@ export class CoursesService {
   }
 
   async findAll(): Promise<Course[]> {
-    return this.courseRepository.find();
+    return this.courseRepository.find({ relations: ['modules'] });
   }
 
   async findOneById(id: number): Promise<Course> {

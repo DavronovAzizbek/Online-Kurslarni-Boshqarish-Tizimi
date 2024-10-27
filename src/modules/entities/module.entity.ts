@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   OneToMany,
+  JoinColumn,
 } from 'typeorm';
 import { Course } from 'src/courses/entities/course.entity';
 import { Lesson } from 'src/lessons/entities/lesson.entity';
@@ -15,6 +16,7 @@ export class Modules {
   id: number;
 
   @ManyToOne(() => Course, (course) => course.modules)
+  @JoinColumn({ name: 'courseId' })
   course: Course;
 
   @Column()
