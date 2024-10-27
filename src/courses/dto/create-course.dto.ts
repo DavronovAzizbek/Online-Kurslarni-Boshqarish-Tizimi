@@ -1,5 +1,4 @@
-// courses/dto/create-course.dto.ts
-import { IsString, IsNotEmpty, IsDecimal } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsPositive } from 'class-validator';
 
 export class CreateCourseDto {
   @IsString()
@@ -10,7 +9,8 @@ export class CreateCourseDto {
   @IsNotEmpty()
   description: string;
 
-  @IsDecimal()
+  @IsNumber()
+  @IsPositive()
   price: number;
 
   @IsString()

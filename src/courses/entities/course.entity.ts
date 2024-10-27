@@ -13,7 +13,7 @@ export class Course {
   @Column()
   description: string;
 
-  @Column('decimal')
+  @Column()
   price: number;
 
   @Column()
