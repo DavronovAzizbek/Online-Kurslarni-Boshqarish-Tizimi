@@ -1,4 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
+import { Modules } from 'src/modules/entities/module.entity';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
 @Entity()
 export class Course {
@@ -11,7 +13,7 @@ export class Course {
   @Column()
   description: string;
 
-  @Column()
+  @Column('decimal')
   price: number;
 
   @Column()
@@ -22,4 +24,10 @@ export class Course {
 
   @Column()
   level: string;
+
+  @OneToMany(() => Enrollment, (enrollment) => enrollment.course)
+  enrollments: Enrollment[];
+
+  @OneToMany(() => Modules, (module) => module.course)
+  modules: Modules[];
 }

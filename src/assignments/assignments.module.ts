@@ -1,9 +1,20 @@
 import { Module } from '@nestjs/common';
-import { AssignmentsService } from './assignments.service';
-import { AssignmentsController } from './assignments.controller';
+import { AssignmentService } from './assignments.service';
+import { AssignmentController } from './assignments.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Assignment } from './entities/assignment.entity';
+import { Result } from 'src/results/entities/result.entity';
+import { ResultsModule } from 'src/results/results.module';
+import { User } from 'src/users/entities/user.entity';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
-  controllers: [AssignmentsController],
-  providers: [AssignmentsService],
+  imports: [
+    TypeOrmModule.forFeature([Assignment, Result, User]),
+    ResultsModule,
+    UsersModule,
+  ],
+  controllers: [AssignmentController],
+  providers: [AssignmentService],
 })
-export class AssignmentsModule {}
+export class AssignmentModule {}

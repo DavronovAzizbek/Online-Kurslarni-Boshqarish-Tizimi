@@ -1,44 +1,70 @@
-// src/auth/auth.controller.ts
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Req,
+  UseGuards,
+  Headers,
+  UnauthorizedException,
+  Get,
+  Delete,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from './dto/create-auth.dto';
+import { CreateAuthDto } from './dto/create-auth.dto';
+import { AuthGuard } from './auth.guard';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
-    const result = await this.authService.register(registerDto);
-    return {
-      message: 'Foydalanuvchi muvaffaqiyatli ro‘yxatdan o‘tdi',
-      user: result.user, // Foydalanuvchi ma'lumotlari (id, name, email)
-    };
+  @Post('register/admin')
+  async registerAdmin(@Body() createAuthDto: CreateAuthDto) {
+    return this.authService.registerAdmin(createAuthDto);
+  }
+
+  @Post('register/user')
+  async registerUser(@Body() createAuthDto: CreateAuthDto) {
+    return this.authService.register(createAuthDto);
   }
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
-    const result = await this.authService.login(loginDto);
-    return {
-      message: 'Tizimga muvaffaqiyatli kirildi',
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-    };
+  async login(
+    @Body() loginDto: { email: string; password: string },
+    @Res() res: any,
+  ) {
+    const data = await this.authService.login(loginDto);
+    res.status(200).json({ data });
   }
 
-  @Post('logout')
-  async logout() {
-    // Foydalanuvchini tizimdan chiqishi
-    return { message: 'Tizimdan muvaffaqiyatli chiqildi' };
+  @UseGuards(AuthGuard)
+  @Get('me')
+  getMyData(@Req() req: Request) {
+    return this.authService.getAllMyData(req.user);
   }
 
+  @UseGuards(AuthGuard)
   @Post('refresh-token')
-  @HttpCode(HttpStatus.OK)
-  async refreshToken(@Body('refreshToken') refreshToken: string) {
-    const result = await this.authService.refreshAccessToken(refreshToken);
-    return {
-      message: 'Access token muvaffaqiyatli yangilandi',
-      accessToken: result.accessToken,
-    };
+  async refreshAccessToken(
+    @Headers('authorization') authHeader: string,
+  ): Promise<{ accessToken: string }> {
+    const refreshToken = authHeader.split(' ')[1];
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is missing');
+    }
+    return this.authService.refreshAccessToken(refreshToken);
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete('logout')
+  async logout(
+    @Headers('authorization') authHeader: string,
+  ): Promise<{ message: string }> {
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedException('Token is missing');
+    }
+    return this.authService.logout(token);
   }
 }

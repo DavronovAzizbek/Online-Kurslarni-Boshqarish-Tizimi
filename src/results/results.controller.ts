@@ -1,34 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ResultsService } from './results.service';
-import { CreateResultDto } from './dto/create-result.dto';
-import { UpdateResultDto } from './dto/update-result.dto';
 
 @Controller('results')
 export class ResultsController {
   constructor(private readonly resultsService: ResultsService) {}
 
-  @Post()
-  create(@Body() createResultDto: CreateResultDto) {
-    return this.resultsService.create(createResultDto);
+  @Get(':userId')
+  async getResults(@Param('userId') userId: number) {
+    return this.resultsService.getResultsByUser(userId);
   }
 
-  @Get()
-  findAll() {
-    return this.resultsService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.resultsService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateResultDto: UpdateResultDto) {
-    return this.resultsService.update(+id, updateResultDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.resultsService.remove(+id);
+  @Get('total/:userId')
+  async getTotalScore(@Param('userId') userId: number) {
+    return {
+      totalScore: await this.resultsService.getTotalScoreByUser(userId),
+    };
   }
 }

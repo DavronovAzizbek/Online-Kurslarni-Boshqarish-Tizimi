@@ -1,27 +1,27 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+// courses/dto/create-course.dto.ts
+import { IsString, IsNotEmpty, IsDecimal } from 'class-validator';
 
 export class CreateCourseDto {
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   name: string;
 
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   description: string;
 
-  @IsNotEmpty()
-  @IsNumber()
+  @IsDecimal()
   price: number;
 
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   teacher: string;
 
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   category: string;
 
-  @IsNotEmpty()
   @IsString()
+  @IsNotEmpty()
   level: string;
 }

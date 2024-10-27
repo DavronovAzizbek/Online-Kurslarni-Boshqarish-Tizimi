@@ -1,109 +1,125 @@
-// src/auth/auth.service.ts
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { CreateAuthDto } from './dto/create-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
-import { RegisterDto, LoginDto } from './dto/create-auth.dto';
 import { User } from 'src/users/entities/user.entity';
+import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
+  loginWithToken() {
+    throw new Error('Method not implemented.');
+  }
   constructor(
-    @InjectRepository(User) private usersRepository: Repository<User>,
-    private jwtService: JwtService,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto) {
-    const { name, email, password } = registerDto;
-
-    const existingUser = await this.usersRepository.findOne({
-      where: { email },
+  async registerAdmin(createAuthDto: CreateAuthDto) {
+    const user = this.userRepository.create({
+      name: createAuthDto.name,
+      email: createAuthDto.email,
+      password: await bcrypt.hash(createAuthDto.password, 10),
+      role: 'admin',
     });
-    if (existingUser) {
-      throw new HttpException(
-        'Bunday foydalanuvchi mavjud',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = this.usersRepository.create({
-      name,
-      email,
-      password: hashedPassword,
-    });
-    await this.usersRepository.save(user);
-
-    return {
-      message: 'Foydalanuvchi muvaffaqiyatli ro‘yxatdan o‘tdi',
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
-    };
+    await this.userRepository.save(user);
+    return { message: 'Admin is successfully registered' };
   }
 
-  async login(loginDto: LoginDto) {
-    const { email, password } = loginDto;
-    const user = await this.usersRepository.findOne({ where: { email } });
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new HttpException(
-        'Noto‘g‘ri email yoki parol',
-        HttpStatus.UNAUTHORIZED,
-      );
+  async register(createAuthDto: CreateAuthDto) {
+    const existingUser = await this.userRepository.findOneBy({
+      email: createAuthDto.email,
+    });
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
     }
 
-    const accessToken = this.generateAccessToken(user);
-    const refreshToken = this.generateRefreshToken(user);
+    const user = this.userRepository.create({
+      name: createAuthDto.name,
+      email: createAuthDto.email,
+      password: await bcrypt.hash(createAuthDto.password, 10),
+      role: 'user',
+    });
 
-    // Refresh tokenni foydalanuvchi yozuviga saqlaymiz
+    await this.userRepository.save(user);
+    return { message: 'You are successfully registered' };
+  }
+
+  async login(loginDto: { email: string; password: string }) {
+    const user = await this.userRepository.findOneBy({ email: loginDto.email });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Incorrect password');
+    }
+
+    const payload = { id: user.id, email: user.email, role: user.role };
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
     user.refreshToken = refreshToken;
-    await this.usersRepository.save(user);
+    await this.userRepository.save(user);
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...userData } = user;
     return {
-      message: 'Tizimga muvaffaqiyatli kirildi',
       accessToken,
       refreshToken,
     };
   }
 
-  async logout() {
-    return { message: 'Tizimdan muvaffaqiyatli chiqildi' };
+  async getAllMyData(payload: any) {
+    return this.userRepository.findOneBy({ id: payload.id });
   }
+  async refreshAccessToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string }> {
+    try {
+      const payload = this.jwtService.verify(refreshToken);
+      const user = await this.userRepository.findOneBy({ id: payload.id });
 
-  async refreshAccessToken(refreshToken: string) {
-    // Foydalanuvchini refresh tokeni orqali topamiz
-    const user = await this.usersRepository.findOne({
-      where: { refreshToken },
-    });
+      if (!user || user.refreshToken !== refreshToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
 
-    if (!user) {
-      throw new HttpException(
-        'Yaroqsiz refresh token',
-        HttpStatus.UNAUTHORIZED,
-      );
+      const newAccessToken = this.jwtService.sign({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      });
+
+      return { accessToken: newAccessToken };
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
     }
-
-    // Yangi access tokenni yaratamiz
-    const newAccessToken = this.generateAccessToken(user);
-
-    return { accessToken: newAccessToken };
   }
 
-  private generateAccessToken(user: User) {
-    const payload = { email: user.email, sub: user.id };
-    return this.jwtService.sign(payload, {
-      expiresIn: '15m', // Access token amal qilish muddati
-    });
-  }
+  async logout(token: string): Promise<{ message: string }> {
+    try {
+      const payload = this.jwtService.verify(token);
+      const user = await this.userRepository.findOneBy({ id: payload.id });
+      if (!user) {
+        throw new UnauthorizedException('Token is invalid or expired');
+      }
 
-  private generateRefreshToken(user: User) {
-    const payload = { email: user.email, sub: user.id };
-    return this.jwtService.sign(payload, {
-      expiresIn: '7d', // Refresh token amal qilish muddati
-    });
+      await this.userRepository.delete(user.id);
+
+      return { message: `User ${payload.id} has logged out successfully` };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      throw new UnauthorizedException('Token is invalid or expired');
+    }
   }
 }

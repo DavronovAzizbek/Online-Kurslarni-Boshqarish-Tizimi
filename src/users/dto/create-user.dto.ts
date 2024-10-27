@@ -1,12 +1,27 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsOptional,
+  IsIn,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 
 export class CreateUserDto {
-  @IsNotEmpty()
+  @IsString()
+  @MaxLength(50)
   name: string;
 
   @IsEmail()
+  @MaxLength(50)
   email: string;
 
-  @IsNotEmpty()
+  @IsString()
+  @MinLength(8)
+  @MaxLength(40)
   password: string;
+
+  @IsOptional()
+  @IsIn(['admin'])
+  role?: string;
 }
