@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Lesson } from './entities/lesson.entity';
-import { Repository } from 'typeorm';
 import { Modules } from 'src/modules/entities/module.entity';
 
 @Injectable()
@@ -15,18 +20,23 @@ export class LessonService {
     private moduleRepository: Repository<Modules>,
   ) {}
 
-  async create(createLessonDto: CreateLessonDto): Promise<Lesson> {
-    const moduleExists = await this.moduleRepository.findOne({
-      where: { id: createLessonDto.moduleId },
+  async create({
+    title,
+    content,
+    contentType,
+    modulesId,
+  }: CreateLessonDto): Promise<Lesson> {
+    const modules = await this.moduleRepository.findOneBy({ id: modulesId });
+    if (!modules)
+      throw new HttpException('Modules not found', HttpStatus.NOT_FOUND);
+    const lesson = await this.lessonRepository.create({
+      title,
+      content,
+      contentType,
+      modules,
     });
-
-    if (!moduleExists) {
-      throw new NotFoundException(
-        `Module with ID ${createLessonDto.moduleId} not found`,
-      );
-    }
-    const lesson = this.lessonRepository.create(createLessonDto);
-    return this.lessonRepository.save(lesson);
+    await this.lessonRepository.save(lesson);
+    return lesson;
   }
 
   async findAll(): Promise<Lesson[]> {
@@ -42,24 +52,28 @@ export class LessonService {
   }
 
   async update(id: number, updateLessonDto: UpdateLessonDto): Promise<Lesson> {
-    await this.findOne(id);
-    await this.lessonRepository.update(id, updateLessonDto);
-    return this.findOne(id);
+    const lesson = await this.findOne(id);
+
+    if (updateLessonDto.modulesId) {
+      const moduleExists = await this.moduleRepository.findOne({
+        where: { id: updateLessonDto.modulesId },
+      });
+
+      if (!moduleExists) {
+        throw new NotFoundException(
+          `Module with ID ${updateLessonDto.modulesId} not found`,
+        );
+      }
+
+      lesson.modules = moduleExists;
+    }
+
+    Object.assign(lesson, updateLessonDto);
+    return this.lessonRepository.save(lesson);
   }
 
   async remove(id: number): Promise<void> {
     const lesson = await this.findOne(id);
     await this.lessonRepository.remove(lesson);
-  }
-
-  async findLessonsByModule(moduleId: number): Promise<Lesson[]> {
-    const lessons = await this.lessonRepository.find({
-      where: { module: { id: moduleId } },
-    });
-
-    if (!lessons.length) {
-      throw new NotFoundException(`No lessons found for module ID ${moduleId}`);
-    }
-    return lessons;
   }
 }

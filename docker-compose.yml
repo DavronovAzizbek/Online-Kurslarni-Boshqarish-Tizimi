@@ -13,7 +13,7 @@ services:
       DATABASE_PORT: 5432
       DATABASE_USER: postgres
       DATABASE_PASSWORD: azizbek002
-      DATABASE_NAME: n9
+      DATABASE_NAME: imtihon
     depends_on:
       - db
     networks:
@@ -26,7 +26,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: azizbek002
-      POSTGRES_DB: n9
+      POSTGRES_DB: imtihon
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:

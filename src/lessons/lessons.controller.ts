@@ -15,24 +15,31 @@ import { Lesson } from './entities/lesson.entity';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 
-@Controller('lesson')
+@Controller('lessons')
 export class LessonController {
   constructor(private readonly lessonService: LessonService) {}
 
   @UseGuards(AuthGuard, RolesGuard)
   @Post()
-  async create(@Body() createLessonDto: CreateLessonDto): Promise<Lesson> {
-    return this.lessonService.create(createLessonDto);
+  async create(
+    @Body() createLessonDto: CreateLessonDto,
+  ): Promise<{ message: string; lesson: Lesson }> {
+    const lesson = await this.lessonService.create(createLessonDto);
+    return { message: 'Lesson created successfully', lesson };
   }
 
-  @Get('all')
-  async findAll(): Promise<Lesson[]> {
-    return this.lessonService.findAll();
+  @Get()
+  async findAll(): Promise<{ message: string; lessons: Lesson[] }> {
+    const lessons = await this.lessonService.findAll();
+    return { message: 'Lessons retrieved successfully', lessons };
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Lesson> {
-    return this.lessonService.findOne(+id);
+  async findOne(
+    @Param('id') id: string,
+  ): Promise<{ message: string; lesson: Lesson }> {
+    const lesson = await this.lessonService.findOne(+id);
+    return { message: 'Lesson retrieved successfully', lesson };
   }
 
   @UseGuards(AuthGuard, RolesGuard)
@@ -40,20 +47,15 @@ export class LessonController {
   async update(
     @Param('id') id: string,
     @Body() updateLessonDto: UpdateLessonDto,
-  ): Promise<Lesson> {
-    return this.lessonService.update(+id, updateLessonDto);
+  ): Promise<{ message: string; lesson: Lesson }> {
+    const lesson = await this.lessonService.update(+id, updateLessonDto);
+    return { message: 'Lesson updated successfully', lesson };
   }
 
   @UseGuards(AuthGuard, RolesGuard)
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<void> {
-    return this.lessonService.remove(+id);
-  }
-
-  @Get('/modules/:moduleId/lessons')
-  async findLessonsByModule(
-    @Param('moduleId') moduleId: string,
-  ): Promise<Lesson[]> {
-    return this.lessonService.findLessonsByModule(+moduleId);
+  async remove(@Param('id') id: string): Promise<{ message: string }> {
+    await this.lessonService.remove(+id);
+    return { message: 'Lesson deleted successfully' };
   }
 }

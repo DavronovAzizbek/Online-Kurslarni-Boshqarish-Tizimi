@@ -15,6 +15,7 @@ import { Modules } from './modules/entities/module.entity';
 import { Assignment } from './assignments/entities/assignment.entity';
 import { Result } from './results/entities/result.entity';
 import { ModulesModule } from './modules/modules.module';
+import { LessonModule } from './lessons/lessons.module';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { ModulesModule } from './modules/modules.module';
       port: +process.env.DATABASE_PORT || 5432,
       username: process.env.DATABASE_USER || 'postgres',
       password: process.env.DATABASE_PASSWORD || 'azizbek002',
-      database: process.env.DATABASE_NAME || 'n9',
+      database: process.env.DATABASE_NAME || 'imtihon',
       entities: [User, Course, Enrollment, Lesson, Modules, Assignment, Result],
       synchronize: true,
     }),
@@ -38,6 +39,7 @@ import { ModulesModule } from './modules/modules.module';
     UsersModule,
     EnrollmentModule,
     ModulesModule,
+    LessonModule,
   ],
   controllers: [],
   providers: [],

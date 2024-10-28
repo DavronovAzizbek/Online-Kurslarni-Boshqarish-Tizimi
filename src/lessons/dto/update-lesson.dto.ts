@@ -1,13 +1,16 @@
-// src/lessons/dto/update-lesson.dto.ts
-
-import { IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, IsNumber } from 'class-validator';
 
 export class UpdateLessonDto {
   @IsOptional()
   @IsString()
-  title?: string; // Yangilangan dars nomi
+  @IsNotEmpty()
+  title?: string;
 
   @IsOptional()
   @IsString()
-  content?: string; // Yangilangan dars matni yoki video linki
+  description?: string;
+
+  @IsOptional()
+  @IsNumber()
+  modulesId: number;
 }

@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateLessonDto {
   @IsString()
@@ -9,9 +9,11 @@ export class CreateLessonDto {
   @IsNotEmpty()
   content: string;
 
-  @IsEnum(['text'])
-  contentType: 'text';
+  @IsString()
+  @IsNotEmpty()
+  contentType: string;
 
   @IsNotEmpty()
-  moduleId: number;
+  @IsNumber()
+  modulesId: number;
 }

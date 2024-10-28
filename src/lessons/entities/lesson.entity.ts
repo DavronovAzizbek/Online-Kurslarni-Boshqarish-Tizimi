@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Modules } from 'src/modules/entities/module.entity';
 
 @Entity()
@@ -9,12 +15,13 @@ export class Lesson {
   @Column()
   title: string;
 
-  @Column('text')
+  @Column()
   content: string;
 
   @Column()
-  contentType: 'text';
+  contentType: string;
 
-  @ManyToOne(() => Modules, (module) => module.lessons)
-  module: Modules;
+  @ManyToOne(() => Modules, (modules) => modules.lessons)
+  @JoinColumn()
+  modules: Modules;
 }
