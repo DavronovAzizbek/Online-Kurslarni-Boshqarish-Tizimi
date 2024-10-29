@@ -26,13 +26,13 @@ export class ModuleController {
     @Body() createModuleDto: CreateModuleDto,
   ): Promise<{ message: string; module: Modules }> {
     const module = await this.moduleService.create(createModuleDto);
-    return { message: 'Module created successfully', module };
+    return { message: 'Module created successfully ✅', module };
   }
 
   @Get()
   async findAll(): Promise<{ message: string; modules: Modules[] }> {
     const modules = await this.moduleService.findAll();
-    return { message: 'All modules retrieved successfully', modules };
+    return { message: 'All modules retrieved successfully ✅', modules };
   }
 
   @Get(':id')
@@ -44,7 +44,7 @@ export class ModuleController {
       throw new NotFoundException(`Invalid ID: ${id}`);
     }
     const module = await this.moduleService.findOne(moduleId);
-    return { message: 'Module retrieved successfully', module };
+    return { message: 'Module retrieved successfully ✅', module };
   }
 
   @UseGuards(AuthGuard, RolesGuard)
@@ -58,7 +58,7 @@ export class ModuleController {
       throw new NotFoundException(`Invalid ID: ${id}`);
     }
     const module = await this.moduleService.update(moduleId, updateModuleDto);
-    return { message: 'Module updated successfully', module };
+    return { message: 'Module updated successfully ✅', module };
   }
 
   @UseGuards(AuthGuard, RolesGuard)
@@ -69,6 +69,6 @@ export class ModuleController {
       throw new NotFoundException(`Invalid ID: ${id}`);
     }
     await this.moduleService.remove(moduleId);
-    return { message: 'Module deleted successfully' };
+    return { message: 'Module deleted successfully ✅' };
   }
 }

@@ -25,13 +25,13 @@ export class LessonController {
     @Body() createLessonDto: CreateLessonDto,
   ): Promise<{ message: string; lesson: Lesson }> {
     const lesson = await this.lessonService.create(createLessonDto);
-    return { message: 'Lesson created successfully', lesson };
+    return { message: 'Lesson created successfully ✅', lesson };
   }
 
   @Get()
   async findAll(): Promise<{ message: string; lessons: Lesson[] }> {
     const lessons = await this.lessonService.findAll();
-    return { message: 'Lessons retrieved successfully', lessons };
+    return { message: 'Lessons retrieved successfully ✅', lessons };
   }
 
   @Get(':id')
@@ -39,7 +39,7 @@ export class LessonController {
     @Param('id') id: string,
   ): Promise<{ message: string; lesson: Lesson }> {
     const lesson = await this.lessonService.findOne(+id);
-    return { message: 'Lesson retrieved successfully', lesson };
+    return { message: 'Lesson retrieved successfully ✅', lesson };
   }
 
   @UseGuards(AuthGuard, RolesGuard)
@@ -49,13 +49,13 @@ export class LessonController {
     @Body() updateLessonDto: UpdateLessonDto,
   ): Promise<{ message: string; lesson: Lesson }> {
     const lesson = await this.lessonService.update(+id, updateLessonDto);
-    return { message: 'Lesson updated successfully', lesson };
+    return { message: 'Lesson updated successfully ✅', lesson };
   }
 
   @UseGuards(AuthGuard, RolesGuard)
   @Delete(':id')
   async remove(@Param('id') id: string): Promise<{ message: string }> {
     await this.lessonService.remove(+id);
-    return { message: 'Lesson deleted successfully' };
+    return { message: 'Lesson deleted successfully ✅' };
   }
 }

@@ -10,17 +10,16 @@ import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from 'src/users/users.service'; // Foydalanuvchilarni olish uchun service
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
-    private readonly usersService: UsersService, // Foydalanuvchilar service'i
+    private readonly usersService: UsersService,
   ) {}
 
-  // Adminni ro'yxatdan o'tkazish
   async registerAdmin(createAuthDto: CreateAuthDto) {
     const user = this.userRepository.create({
       name: createAuthDto.name,
@@ -32,7 +31,6 @@ export class AuthService {
     return { message: 'Admin is successfully registered' };
   }
 
-  // Foydalanuvchini ro'yxatdan o'tkazish
   async register(createAuthDto: CreateAuthDto) {
     const existingUser = await this.userRepository.findOneBy({
       email: createAuthDto.email,
@@ -52,7 +50,6 @@ export class AuthService {
     return { message: 'You are successfully registered' };
   }
 
-  // Kirish funksiyasi
   async login(loginDto: { email: string; password: string }) {
     const user = await this.userRepository.findOneBy({ email: loginDto.email });
     if (!user) {
@@ -83,12 +80,10 @@ export class AuthService {
     };
   }
 
-  // Foydalanuvchi ma'lumotlarini olish
   async getAllMyData(payload: any) {
     return this.userRepository.findOneBy({ id: payload.id });
   }
 
-  // Access tokenni yangilash
   async refreshAccessToken(
     refreshToken: string,
   ): Promise<{ accessToken: string }> {
@@ -112,19 +107,17 @@ export class AuthService {
     }
   }
 
-  // Foydalanuvchini tekshirish
   async validateUser(token: string): Promise<User | null> {
     try {
       const payload = this.jwtService.verify(token);
-      const user = await this.usersService.findById(payload.id); // Foydalanuvchini ID orqali olish
-      return user; // Agar foydalanuvchi mavjud bo'lsa, qaytaring
+      const user = await this.usersService.findById(payload.id);
+      return user;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
-      return null; // Agar xato bo'lsa, null qaytaring
+      return null;
     }
   }
 
-  // Logout funksiyasi
   async logout(token: string): Promise<{ message: string }> {
     try {
       const payload = this.jwtService.verify(token);
@@ -133,7 +126,7 @@ export class AuthService {
         throw new UnauthorizedException('Token is invalid or expired');
       }
 
-      user.refreshToken = null; // Refresh tokenni nullga o'rnatish
+      user.refreshToken = null;
       await this.userRepository.save(user);
 
       return { message: `User ${payload.id} has logged out successfully` };

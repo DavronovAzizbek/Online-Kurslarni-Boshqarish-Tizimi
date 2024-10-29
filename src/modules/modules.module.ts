@@ -11,6 +11,6 @@ import { Lesson } from 'src/lessons/entities/lesson.entity';
   imports: [TypeOrmModule.forFeature([Modules, Course, Lesson])],
   controllers: [ModuleController],
   providers: [ModuleService],
-  exports: [TypeOrmModule], // Modules repositoryni eksport qilish
+  exports: [TypeOrmModule],
 })
 export class ModulesModule {}

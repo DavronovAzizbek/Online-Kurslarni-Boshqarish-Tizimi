@@ -17,7 +17,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 export class EnrollmentController {
   constructor(private readonly enrollmentService: EnrollmentService) {}
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, UseGuards)
   @Post('enroll')
   async enrollUser(
     @Request() req,
@@ -29,15 +29,15 @@ export class EnrollmentController {
     );
 
     await this.enrollmentService.enrollUser(user, course);
-    return `You have successfully enrolled in the course: ${course.name}`;
+    return `You have successfully enrolled in the course: ${course.name} ✅`;
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, UseGuards)
   @Get('my-courses')
   async getUserEnrollments(@Request() req): Promise<Enrollment[]> {
     const user: User = req.user;
     if (!user) {
-      throw new UnauthorizedException('User not authenticated');
+      throw new UnauthorizedException('User not authenticated ❌');
     }
     return this.enrollmentService.findUserEnrollments(user.id);
   }

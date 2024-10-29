@@ -25,7 +25,7 @@ export class CoursesController {
   async findAll(): Promise<{ message: string; data: Course[] }> {
     const courses = await this.coursesService.findAll();
     return {
-      message: 'All courses retrieved successfully',
+      message: 'All courses retrieved successfully ✅',
       data: courses,
     };
   }
@@ -39,7 +39,7 @@ export class CoursesController {
   ): Promise<{ message: string; data: Course }> {
     const course = await this.coursesService.create(createCourseDto);
     return {
-      message: 'Course created successfully',
+      message: 'Course created successfully ✅',
       data: course,
     };
   }
@@ -50,7 +50,7 @@ export class CoursesController {
   ): Promise<{ message: string; data: Course }> {
     const course = await this.coursesService.findOneById(id);
     return {
-      message: `Course with ID ${id} retrieved successfully`,
+      message: `Course with ID ${id} retrieved successfully ✅`,
       data: course,
     };
   }
@@ -64,7 +64,7 @@ export class CoursesController {
   ): Promise<{ message: string; data: Course }> {
     const updatedCourse = await this.coursesService.update(id, updateCourseDto);
     return {
-      message: `Course with ID ${id} updated successfully`,
+      message: `Course with ID ${id} updated successfully ✅`,
       data: updatedCourse,
     };
   }
@@ -75,7 +75,7 @@ export class CoursesController {
   async remove(@Param('id') id: number): Promise<{ message: string }> {
     await this.coursesService.remove(id);
     return {
-      message: `Course with ID ${id} deleted successfully`,
+      message: `Course with ID ${id} deleted successfully ✅`,
     };
   }
 }

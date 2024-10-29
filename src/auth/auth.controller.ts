@@ -51,7 +51,7 @@ export class AuthController {
   ): Promise<{ accessToken: string }> {
     const refreshToken = authHeader.split(' ')[1];
     if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token is missing');
+      throw new UnauthorizedException('Refresh token is missing ❌');
     }
     return this.authService.refreshAccessToken(refreshToken);
   }
@@ -63,7 +63,7 @@ export class AuthController {
   ): Promise<{ message: string }> {
     const token = authHeader.split(' ')[1];
     if (!token) {
-      throw new UnauthorizedException('Token is missing');
+      throw new UnauthorizedException('Token is missing ❌');
     }
     return this.authService.logout(token);
   }

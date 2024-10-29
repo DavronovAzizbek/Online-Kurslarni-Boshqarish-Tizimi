@@ -31,7 +31,7 @@ export class AssignmentController {
     createAssignmentDto.moduleId = moduleId;
     const assignment = await this.assignmentService.create(createAssignmentDto);
     return {
-      message: 'Assignment successfully created.',
+      message: 'Assignment successfully created ✅',
       assignment,
     };
   }
@@ -48,7 +48,7 @@ export class AssignmentController {
   ): Promise<Assignment> {
     const assignment = await this.assignmentService.findOne(moduleId, id);
     if (!assignment) {
-      throw new NotFoundException(`Assignment with ID ${id} not found`);
+      throw new NotFoundException(`Assignment with ID ${id} not found ❌`);
     }
     return assignment;
   }
@@ -66,7 +66,7 @@ export class AssignmentController {
       updateAssignmentDto,
     );
     return {
-      message: 'Assignment successfully updated.',
+      message: 'Assignment successfully updated ✅',
       assignment,
     };
   }
@@ -80,7 +80,7 @@ export class AssignmentController {
   ): Promise<{ message: string }> {
     await this.assignmentService.remove(moduleId, id);
     return {
-      message: 'Assignment successfully deleted.',
+      message: 'Assignment successfully deleted ✅',
     };
   }
 }
