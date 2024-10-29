@@ -1,19 +1,58 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Headers,
+} from '@nestjs/common';
 import { ResultsService } from './results.service';
+import { CreateResultDto } from './dto/create-result.dto';
+import { UpdateResultDto } from './dto/update-result.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { Result } from './entities/result.entity';
+import { RolesGuard } from 'src/auth/roles.guard';
 
 @Controller('results')
 export class ResultsController {
   constructor(private readonly resultsService: ResultsService) {}
 
-  @Get(':userId')
-  async getResults(@Param('userId') userId: number) {
-    return this.resultsService.getResultsByUser(userId);
+  @UseGuards(AuthGuard, UseGuards)
+  @Post()
+  create(
+    @Headers('authorization') authorizationHeader: string,
+    @Body() createResultDto: CreateResultDto,
+  ): Promise<Result> {
+    const tokens = authorizationHeader.split(' ');
+    const accessToken = tokens[1];
+    return this.resultsService.create(accessToken, createResultDto);
   }
 
-  @Get('total/:userId')
-  async getTotalScore(@Param('userId') userId: number) {
-    return {
-      totalScore: await this.resultsService.getTotalScoreByUser(userId),
-    };
+  @Get()
+  findAll(): Promise<Result[]> {
+    return this.resultsService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: number): Promise<Result> {
+    return this.resultsService.findOne(+id);
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Patch(':id')
+  update(
+    @Param('id') id: number,
+    @Body() updateResultDto: UpdateResultDto,
+  ): Promise<string> {
+    return this.resultsService.update(+id, updateResultDto);
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Delete(':id')
+  remove(@Param('id') id: number): Promise<string> {
+    return this.resultsService.remove(+id);
   }
 }

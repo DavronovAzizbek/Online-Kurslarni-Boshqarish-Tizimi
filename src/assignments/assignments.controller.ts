@@ -8,34 +8,45 @@ import {
   Delete,
   NotFoundException,
   UseGuards,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { AssignmentService } from './assignments.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { Assignment } from './entities/assignment.entity';
-import { Result } from 'src/results/entities/result.entity';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 
-@Controller('assignment')
+@Controller('assignments')
 export class AssignmentController {
   constructor(private readonly assignmentService: AssignmentService) {}
+
   @UseGuards(AuthGuard, RolesGuard)
   @Post()
   async create(
+    @Param('moduleId') moduleId: number,
     @Body() createAssignmentDto: CreateAssignmentDto,
-  ): Promise<Assignment> {
-    return this.assignmentService.create(createAssignmentDto);
+  ): Promise<{ message: string; assignment: Assignment }> {
+    createAssignmentDto.moduleId = moduleId;
+    const assignment = await this.assignmentService.create(createAssignmentDto);
+    return {
+      message: 'Assignment successfully created.',
+      assignment,
+    };
   }
 
-  @Get('all')
-  async findAll(): Promise<Assignment[]> {
-    return this.assignmentService.findAll();
+  @Get()
+  async findAll(@Param('moduleId') moduleId: number): Promise<Assignment[]> {
+    return this.assignmentService.findAll(moduleId);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: number): Promise<Assignment> {
-    const assignment = await this.assignmentService.findOne(id);
+  async findOne(
+    @Param('moduleId') moduleId: number,
+    @Param('id') id: number,
+  ): Promise<Assignment> {
+    const assignment = await this.assignmentService.findOne(moduleId, id);
     if (!assignment) {
       throw new NotFoundException(`Assignment with ID ${id} not found`);
     }
@@ -43,36 +54,33 @@ export class AssignmentController {
   }
 
   @UseGuards(AuthGuard, RolesGuard)
-  @Post(':assignmentId/submit')
-  submitAssignment(
-    @Param('assignmentId') assignmentId: number,
-    @Body('userId') userId: number,
-    @Body('score') score: number,
-  ) {
-    return this.assignmentService.submitAssignment(userId, assignmentId, score);
-  }
-
-  @UseGuards(AuthGuard, RolesGuard)
-  @Patch(':id/grade')
-  gradeAssignment(
-    @Param('id') id: number,
-    @Body('score') score: number,
-  ): Promise<Result> {
-    return this.assignmentService.gradeAssignment(id, score);
-  }
-
-  @UseGuards(AuthGuard, RolesGuard)
   @Patch(':id')
   async update(
+    @Param('moduleId') moduleId: number,
     @Param('id') id: number,
     @Body() updateAssignmentDto: UpdateAssignmentDto,
-  ): Promise<Assignment> {
-    return this.assignmentService.update(id, updateAssignmentDto);
+  ): Promise<{ message: string; assignment: Assignment }> {
+    const assignment = await this.assignmentService.update(
+      moduleId,
+      id,
+      updateAssignmentDto,
+    );
+    return {
+      message: 'Assignment successfully updated.',
+      assignment,
+    };
   }
 
   @UseGuards(AuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
-  async remove(@Param('id') id: number): Promise<void> {
-    await this.assignmentService.remove(id);
+  async remove(
+    @Param('moduleId') moduleId: number,
+    @Param('id') id: number,
+  ): Promise<{ message: string }> {
+    await this.assignmentService.remove(moduleId, id);
+    return {
+      message: 'Assignment successfully deleted.',
+    };
   }
 }

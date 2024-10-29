@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Assignment } from 'src/assignments/entities/assignment.entity';
 import { User } from 'src/users/entities/user.entity';
 
@@ -7,18 +7,18 @@ export class Result {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column()
+  homework: string;
+
+  @Column({ nullable: true })
+  teacherMessage?: string;
+
+  @Column({ type: 'float', nullable: true })
+  score?: number;
+
   @ManyToOne(() => Assignment, (assignment) => assignment.results)
   assignment: Assignment;
 
   @ManyToOne(() => User, (user) => user.results)
   user: User;
-
-  @Column()
-  score: number;
-
-  @Column()
-  submittedAt: Date;
-
-  @Column({ default: false })
-  isGraded: boolean;
 }

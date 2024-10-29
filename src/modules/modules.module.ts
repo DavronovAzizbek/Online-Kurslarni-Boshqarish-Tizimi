@@ -1,3 +1,4 @@
+// modules.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ModuleController } from './modules.controller';
@@ -10,5 +11,6 @@ import { Lesson } from 'src/lessons/entities/lesson.entity';
   imports: [TypeOrmModule.forFeature([Modules, Course, Lesson])],
   controllers: [ModuleController],
   providers: [ModuleService],
+  exports: [TypeOrmModule], // Modules repositoryni eksport qilish
 })
 export class ModulesModule {}

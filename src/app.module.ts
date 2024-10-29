@@ -28,7 +28,7 @@ import { LessonModule } from './lessons/lessons.module';
       port: +process.env.DATABASE_PORT || 5432,
       username: process.env.DATABASE_USER || 'postgres',
       password: process.env.DATABASE_PASSWORD || 'azizbek002',
-      database: process.env.DATABASE_NAME || 'imtihon',
+      database: process.env.DATABASE_NAME || 'on',
       entities: [User, Course, Enrollment, Lesson, Modules, Assignment, Result],
       synchronize: true,
     }),

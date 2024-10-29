@@ -4,32 +4,41 @@ import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assignment } from './entities/assignment.entity';
 import { Repository } from 'typeorm';
-import { Result } from 'src/results/entities/result.entity';
-import { User } from 'src/users/entities/user.entity';
+import { Modules } from 'src/modules/entities/module.entity';
 
 @Injectable()
 export class AssignmentService {
   constructor(
     @InjectRepository(Assignment)
     private assignmentRepository: Repository<Assignment>,
-    @InjectRepository(Result)
-    private resultRepository: Repository<Result>,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    @InjectRepository(Modules)
+    private moduleRepository: Repository<Modules>,
   ) {}
 
   async create(createAssignmentDto: CreateAssignmentDto): Promise<Assignment> {
-    const assignment = this.assignmentRepository.create(createAssignmentDto);
+    const { moduleId, ...rest } = createAssignmentDto;
+    const module = await this.moduleRepository.findOne({
+      where: { id: moduleId },
+    });
+    if (!module) {
+      throw new NotFoundException(`Module with ID ${moduleId} not found`);
+    }
+    const assignment = this.assignmentRepository.create({
+      ...rest,
+      module,
+    });
     return this.assignmentRepository.save(assignment);
   }
 
-  async findAll(): Promise<Assignment[]> {
-    return this.assignmentRepository.find();
+  async findAll(moduleId: number): Promise<Assignment[]> {
+    return this.assignmentRepository.find({
+      where: { module: { id: moduleId } },
+    });
   }
 
-  async findOne(id: number): Promise<Assignment> {
+  async findOne(moduleId: number, id: number): Promise<Assignment> {
     const assignment = await this.assignmentRepository.findOne({
-      where: { id },
+      where: { id, module: { id: moduleId } },
     });
     if (!assignment) {
       throw new NotFoundException(`Assignment with ID ${id} not found`);
@@ -37,55 +46,18 @@ export class AssignmentService {
     return assignment;
   }
 
-  async submitAssignment(
-    userId: number,
-    assignmentId: number,
-    score: number,
-  ): Promise<Result> {
-    const assignment = await this.findOne(assignmentId);
-    if (!assignment) {
-      throw new NotFoundException(
-        `Assignment with ID ${assignmentId} not found`,
-      );
-    }
-
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException(`User with ID ${userId} not found`);
-    }
-
-    const result = this.resultRepository.create({
-      assignment,
-      user: { id: userId } as User,
-      score,
-      submittedAt: new Date(),
-      isGraded: assignment.gradingType === 'auto',
-    });
-
-    return this.resultRepository.save(result);
-  }
-
-  async gradeAssignment(id: number, score: number): Promise<Result> {
-    const result = await this.resultRepository.findOne({ where: { id } });
-    if (!result) {
-      throw new NotFoundException(`Result with ID ${id} not found`);
-    }
-    result.score = score;
-    result.isGraded = true;
-    return this.resultRepository.save(result);
-  }
-
   async update(
+    moduleId: number,
     id: number,
     updateAssignmentDto: UpdateAssignmentDto,
   ): Promise<Assignment> {
-    await this.findOne(id);
-    await this.assignmentRepository.update(id, updateAssignmentDto);
-    return this.findOne(id);
+    const assignment = await this.findOne(moduleId, id);
+    Object.assign(assignment, updateAssignmentDto);
+    return this.assignmentRepository.save(assignment);
   }
 
-  async remove(id: number): Promise<void> {
-    const assignment = await this.findOne(id);
+  async remove(moduleId: number, id: number): Promise<void> {
+    const assignment = await this.findOne(moduleId, id);
     await this.assignmentRepository.remove(assignment);
   }
 }
