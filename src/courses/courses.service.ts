@@ -20,12 +20,21 @@ export class CoursesService {
     return this.courseRepository.find({ relations: ['modules'] });
   }
 
-  async findOneById(id: number): Promise<Course> {
-    const course = await this.courseRepository.findOne({ where: { id } });
-    if (!course) {
-      throw new NotFoundException(`Course with ID ${id} not found`);
+  async searchCourses(category: string, keyword: string): Promise<Course[]> {
+    const queryBuilder = this.courseRepository.createQueryBuilder('course');
+
+    if (category) {
+      queryBuilder.andWhere('course.category = :category', { category });
     }
-    return course;
+
+    if (keyword) {
+      queryBuilder.andWhere(
+        'course.name ILIKE :keyword OR course.description ILIKE :keyword',
+        { keyword: `%${keyword}%` },
+      );
+    }
+
+    return await queryBuilder.getMany();
   }
 
   async update(
@@ -34,6 +43,17 @@ export class CoursesService {
   ): Promise<Course> {
     await this.courseRepository.update(id, updateCourseDto);
     return this.findOneById(id);
+  }
+
+  async findOneById(id: number): Promise<Course> {
+    const course = await this.courseRepository.findOne({
+      where: { id },
+      relations: ['modules'],
+    });
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${id} not found`);
+    }
+    return course;
   }
 
   async remove(id: number): Promise<string> {

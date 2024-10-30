@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Modules } from 'src/modules/entities/module.entity';
 import { Result } from 'src/results/entities/result.entity';
+import { Lesson } from 'src/lessons/entities/lesson.entity'; // Import the Lesson entity
 
 @Entity()
 export class Assignment {
@@ -31,4 +32,11 @@ export class Assignment {
 
   @OneToMany(() => Result, (result) => result.assignment)
   results: Result[];
+
+  @ManyToOne(() => Lesson, (lesson) => lesson.assignments, {
+    // Establishing the relationship
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'lessonId' }) // Adjust the column name if necessary
+  lesson: Lesson;
 }

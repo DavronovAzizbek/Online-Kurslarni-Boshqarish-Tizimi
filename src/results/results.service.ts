@@ -28,7 +28,6 @@ export class ResultsService {
     private readonly jwtService: JwtService,
   ) {}
 
-  // Yangi natija yaratish
   async create(
     accessToken: string,
     { homework, assignmentId }: CreateResultDto,
@@ -48,7 +47,6 @@ export class ResultsService {
       if (!assignment)
         throw new HttpException('Assignment not found', HttpStatus.NOT_FOUND);
 
-      // Yangi `Result` obyekti yaratish
       const result = this.resultRepository.create({
         homework,
         assignment,
@@ -63,7 +61,6 @@ export class ResultsService {
     }
   }
 
-  // Barcha natijalarni olish
   async findAll(): Promise<Result[]> {
     const result = await this.resultRepository.find({
       relations: ['assignment', 'user'],
@@ -71,7 +68,6 @@ export class ResultsService {
     return result;
   }
 
-  // ID bo‘yicha natija olish
   async findOne(id: number): Promise<Result> {
     const result = await this.resultRepository.findOne({
       where: { id },
@@ -82,7 +78,6 @@ export class ResultsService {
     return result;
   }
 
-  // Natijani yangilash
   async update(id: number, { teacherMessage, score }: UpdateResultDto) {
     const result = await this.resultRepository.findOneBy({ id });
     if (!result)
@@ -91,7 +86,6 @@ export class ResultsService {
     return `Assignment updated successfully.`;
   }
 
-  // Natijani o‘chirish
   async remove(id: number): Promise<string> {
     const result = await this.resultRepository.findOneBy({ id });
     if (!result) {

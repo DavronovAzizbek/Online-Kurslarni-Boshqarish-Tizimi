@@ -1,7 +1,15 @@
 import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
 import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 import { Modules } from 'src/modules/entities/module.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  ManyToMany,
+  PrimaryGeneratedColumn,
+  JoinTable,
+} from 'typeorm';
+import { User } from 'src/users/entities/user.entity';
 
 @Entity()
 export class Course {
@@ -43,4 +51,8 @@ export class Course {
 
   @OneToMany(() => Modules, (module) => module.course)
   modules: Modules[];
+
+  @ManyToMany(() => User, (user) => user.courses)
+  @JoinTable() // JoinTable xususiyatini qo'shing
+  users: User[]; // courses xususiyati
 }

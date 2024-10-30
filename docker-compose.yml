@@ -1,39 +1,39 @@
-version: '3.8'
-
+version: '3'
 services:
-  app:
-    image: nestjs-app
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - '3000:3000'
-    environment:
-      DATABASE_HOST: db
-      DATABASE_PORT: 5432
-      DATABASE_USER: postgres
-      DATABASE_PASSWORD: azizbek002
-      DATABASE_NAME: on
-    depends_on:
-      - db
-    networks:
-      - app-network
-
   db:
-    image: postgres:13
-    ports:
-      - '5432:5432'
+    image: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: azizbek002
-      POSTGRES_DB: on
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      POSTGRES_DB: exam
     networks:
-      - app-network
+      - ntSearch
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-volumes:
-  postgres_data:
+  backend:
+    build: .
+    image: exam
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=exam
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=azizbek002
+      - POSTGRES_DB=exam
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ntSearch
 
 networks:
-  app-network:
+  ntSearch:
+    driver: bridge

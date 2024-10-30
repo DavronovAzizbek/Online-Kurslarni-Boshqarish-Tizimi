@@ -36,4 +36,14 @@ export class EnrollmentService {
     }
     return course;
   }
+
+  async checkEnrollment(userId: number, courseId: number): Promise<boolean> {
+    const enrollment = await this.enrollmentRepository.findOne({
+      where: {
+        user: { id: userId },
+        course: { id: courseId },
+      },
+    });
+    return !!enrollment;
+  }
 }

@@ -1,13 +1,12 @@
-import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
-import { Result } from 'src/results/entities/result.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  OneToMany,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Course } from 'src/courses/entities/course.entity';
 
 @Entity('users')
 export class User {
@@ -35,9 +34,8 @@ export class User {
   @Column({ nullable: true })
   refreshToken?: string;
 
-  @OneToMany(() => Enrollment, (enrollment) => enrollment.user)
-  enrollments: Enrollment[];
-
-  @OneToMany(() => Result, (result) => result.user)
-  results: Result[];
+  @ManyToMany(() => Course, (course) => course.users)
+  courses: Course[];
+  enrollments: any;
+  results: any;
 }

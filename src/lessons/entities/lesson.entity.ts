@@ -2,10 +2,12 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
+  OneToMany,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
 import { Modules } from 'src/modules/entities/module.entity';
+import { Assignment } from 'src/assignments/entities/assignment.entity';
 
 @Entity()
 export class Lesson {
@@ -24,4 +26,7 @@ export class Lesson {
   @ManyToOne(() => Modules, (modules) => modules.lessons)
   @JoinColumn()
   modules: Modules;
+
+  @OneToMany(() => Assignment, (assignment) => assignment.lesson)
+  assignments: Assignment[];
 }

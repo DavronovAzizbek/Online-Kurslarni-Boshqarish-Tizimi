@@ -9,6 +9,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -44,14 +45,15 @@ export class CoursesController {
     };
   }
 
-  @Get(':id')
-  async findOne(
-    @Param('id') id: number,
-  ): Promise<{ message: string; data: Course }> {
-    const course = await this.coursesService.findOneById(id);
+  @Get('search')
+  async searchCourses(
+    @Query('category') category: string,
+    @Query('keyword') keyword: string,
+  ): Promise<{ message: string; data: Course[] }> {
+    const courses = await this.coursesService.searchCourses(category, keyword);
     return {
-      message: `Course with ID ${id} retrieved successfully ✅`,
-      data: course,
+      message: 'Courses filtered and searched successfully ✅',
+      data: courses,
     };
   }
 
