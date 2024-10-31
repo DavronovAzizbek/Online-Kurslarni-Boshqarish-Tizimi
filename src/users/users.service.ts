@@ -3,13 +3,14 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async createAdmin(
@@ -18,12 +19,10 @@ export class UsersService {
     password: string,
     role: string,
   ) {
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
     const user = this.userRepository.create({
       name,
       email,
-      password: hashedPassword,
+      password,
       role,
     });
     await this.userRepository.save(user);
@@ -31,7 +30,7 @@ export class UsersService {
   }
 
   findAll() {
-    return this.userRepository.find(); // Return all users from the database.
+    return this.userRepository.find();
   }
 
   findOne(id: number) {
@@ -50,5 +49,16 @@ export class UsersService {
   async remove(id: number) {
     await this.userRepository.delete(id);
     return { message: `User #${id} has been removed` };
+  }
+
+  async findByToken(token: string): Promise<User | null> {
+    try {
+      const pureToken = token.startsWith('Bearer ') ? token.slice(7) : token;
+      const decoded = this.jwtService.verify(pureToken);
+      return this.userRepository.findOne({ where: { id: decoded.id } });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      return null;
+    }
   }
 }

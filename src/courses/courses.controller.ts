@@ -46,15 +46,8 @@ export class CoursesController {
   }
 
   @Get('search')
-  async searchCourses(
-    @Query('category') category: string,
-    @Query('keyword') keyword: string,
-  ): Promise<{ message: string; data: Course[] }> {
-    const courses = await this.coursesService.searchCourses(category, keyword);
-    return {
-      message: 'Courses filtered and searched successfully ✅',
-      data: courses,
-    };
+  async search(@Query('name') name: string): Promise<Course[]> {
+    return this.coursesService.searchCourses(name);
   }
 
   @UseGuards(AuthGuard, RolesGuard)

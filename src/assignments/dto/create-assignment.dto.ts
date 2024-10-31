@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsInt } from 'class-validator';
+import { IsNotEmpty, IsString, IsInt, IsDateString } from 'class-validator';
 
 export class CreateAssignmentDto {
   @IsNotEmpty()
@@ -11,4 +11,11 @@ export class CreateAssignmentDto {
 
   @IsInt()
   moduleId: number;
+
+  @IsDateString()
+  deadline: string;
+
+  @IsNotEmpty()
+  @IsString()
+  title: string;
 }

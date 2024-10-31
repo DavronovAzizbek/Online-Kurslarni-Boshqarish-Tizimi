@@ -1,44 +1,54 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
   Request,
   UseGuards,
   UnauthorizedException,
+  Get,
+  Param,
 } from '@nestjs/common';
 import { EnrollmentService } from './enrollment.service';
-import { User } from 'src/users/entities/user.entity';
-import { Course } from 'src/courses/entities/course.entity';
-import { Enrollment } from './entities/enrollment.entity';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
+import { RolesUserGuard } from 'src/auth/RolesUserGuard';
 
 @Controller('enrollment')
 export class EnrollmentController {
   constructor(private readonly enrollmentService: EnrollmentService) {}
 
-  @UseGuards(AuthGuard, UseGuards)
-  @Post('enroll')
-  async enrollUser(
+  @Post('create')
+  @UseGuards(RolesUserGuard)
+  async createEnrollment(
     @Request() req,
-    @Body() body: { courseId: number },
-  ): Promise<string> {
-    const user: User = req.user;
-    const course: Course = await this.enrollmentService.findCourseById(
-      body.courseId,
+    @Body() createEnrollmentDto: CreateEnrollmentDto,
+  ): Promise<{ message: string; courseName?: string; lessons?: any[] }> {
+    const user = req.user;
+
+    if (user.role !== 'user') {
+      throw new UnauthorizedException(
+        'Only regular users can enroll in courses ❌',
+      );
+    }
+
+    const enrollment = await this.enrollmentService.createEnrollment(
+      user.id,
+      createEnrollmentDto,
     );
 
-    await this.enrollmentService.enrollUser(user, course);
-    return `You have successfully enrolled in the course: ${course.name} ✅`;
+    return {
+      message: 'Enrollment created successfully! ✅',
+      courseName: enrollment.course.name,
+      lessons: enrollment.course.lessons,
+    };
   }
 
-  @UseGuards(AuthGuard, UseGuards)
-  @Get('my-courses')
-  async getUserEnrollments(@Request() req): Promise<Enrollment[]> {
-    const user: User = req.user;
-    if (!user) {
-      throw new UnauthorizedException('User not authenticated ❌');
-    }
-    return this.enrollmentService.findUserEnrollments(user.id);
+  @UseGuards(RolesUserGuard)
+  @Get(':courseId/lessons')
+  async getLessonsByCourseId(
+    @Param('courseId') courseId: number,
+    @Request() req,
+  ) {
+    const userId = req.user.id;
+    return this.enrollmentService.getLessonsByCourseId(userId, courseId);
   }
 }

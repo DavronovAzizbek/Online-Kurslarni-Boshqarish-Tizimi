@@ -15,20 +15,20 @@ import { UpdateResultDto } from './dto/update-result.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Result } from './entities/result.entity';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { RolesUserGuard } from 'src/auth/RolesUserGuard';
 
 @Controller('results')
 export class ResultsController {
   constructor(private readonly resultsService: ResultsService) {}
 
-  @UseGuards(AuthGuard, UseGuards)
+  @UseGuards(RolesUserGuard)
   @Post()
   create(
     @Headers('authorization') authorizationHeader: string,
     @Body() createResultDto: CreateResultDto,
   ): Promise<Result> {
-    const tokens = authorizationHeader.split(' ');
-    const accessToken = tokens[1];
-    return this.resultsService.create(accessToken, createResultDto);
+    const token = authorizationHeader.split(' ')[1];
+    return this.resultsService.create(token, createResultDto);
   }
 
   @Get()

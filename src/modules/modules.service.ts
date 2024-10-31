@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Modules } from './entities/module.entity';
 import { Repository } from 'typeorm';
 import { Course } from 'src/courses/entities/course.entity';
+import { Lesson } from 'src/lessons/entities/lesson.entity';
 
 @Injectable()
 export class ModuleService {
@@ -51,6 +52,19 @@ export class ModuleService {
     }
 
     return module;
+  }
+
+  async findLessonsByModuleId(moduleId: number): Promise<Lesson[]> {
+    const module = await this.moduleRepository.findOne({
+      where: { id: moduleId },
+      relations: ['lessons'],
+    });
+
+    if (!module) {
+      throw new NotFoundException(`Module with ID ${moduleId} not found`);
+    }
+
+    return module.lessons;
   }
 
   async update(id: number, updateModuleDto: UpdateModuleDto): Promise<Modules> {

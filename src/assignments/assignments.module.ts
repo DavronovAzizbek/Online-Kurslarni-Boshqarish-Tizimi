@@ -8,10 +8,11 @@ import { ResultsModule } from 'src/results/results.module';
 import { User } from 'src/users/entities/user.entity';
 import { UsersModule } from 'src/users/users.module';
 import { ModulesModule } from 'src/modules/modules.module';
+import { Enrollment } from 'src/enrollment/entities/enrollment.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Assignment, Result, User]),
+    TypeOrmModule.forFeature([Assignment, Result, User, Enrollment]),
     ResultsModule,
     UsersModule,
     ModulesModule,

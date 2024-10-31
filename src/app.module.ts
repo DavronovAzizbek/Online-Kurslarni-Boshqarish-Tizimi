@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CoursesModule } from './courses/courses.module';
+import { CourseModule } from './courses/courses.module';
 import { AssignmentModule } from './assignments/assignments.module';
 import { ResultsModule } from './results/results.module';
 import { AuthModule } from './auth/auth.module';
@@ -33,7 +33,7 @@ import { LessonModule } from './lessons/lessons.module';
       synchronize: true,
     }),
     AuthModule,
-    CoursesModule,
+    CourseModule,
     AssignmentModule,
     ResultsModule,
     UsersModule,

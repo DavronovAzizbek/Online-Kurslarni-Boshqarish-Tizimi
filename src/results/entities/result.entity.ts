@@ -1,4 +1,11 @@
-import { Entity, Column, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { Assignment } from 'src/assignments/entities/assignment.entity';
 import { User } from 'src/users/entities/user.entity';
 
@@ -21,4 +28,10 @@ export class Result {
 
   @ManyToOne(() => User, (user) => user.results)
   user: User;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

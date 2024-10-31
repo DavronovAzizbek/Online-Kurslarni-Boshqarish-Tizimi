@@ -36,6 +36,19 @@ export class AssignmentController {
     };
   }
 
+  @Post(':assignmentId/submit-response')
+  async submitResponse(
+    @Param('assignmentId') assignmentId: number,
+    @Body('userId') userId: number,
+    @Body('response') response: string,
+  ): Promise<Assignment> {
+    return this.assignmentService.submitResponse(
+      userId,
+      assignmentId,
+      response,
+    );
+  }
+
   @Get()
   async findAll(@Param('moduleId') moduleId: number): Promise<Assignment[]> {
     return this.assignmentService.findAll(moduleId);

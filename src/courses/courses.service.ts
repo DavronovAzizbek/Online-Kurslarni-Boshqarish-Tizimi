@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Course } from './entities/course.entity';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class CoursesService {
@@ -20,21 +20,17 @@ export class CoursesService {
     return this.courseRepository.find({ relations: ['modules'] });
   }
 
-  async searchCourses(category: string, keyword: string): Promise<Course[]> {
-    const queryBuilder = this.courseRepository.createQueryBuilder('course');
-
-    if (category) {
-      queryBuilder.andWhere('course.category = :category', { category });
+  async searchCourses(nameFilter: string): Promise<Course[]> {
+    if (!nameFilter) {
+      return this.courseRepository.find(); // Agar filter bo'sh bo'lsa, barcha kurslarni qaytar
     }
-
-    if (keyword) {
-      queryBuilder.andWhere(
-        'course.name ILIKE :keyword OR course.description ILIKE :keyword',
-        { keyword: `%${keyword}%` },
-      );
-    }
-
-    return await queryBuilder.getMany();
+    // Boshidan kelishi uchun LIKE shartini o'rnatamiz
+    const courses = await this.courseRepository.find({
+      where: {
+        name: Like(`${nameFilter}%`), // Faqat boshida keladiganlar
+      },
+    });
+    return courses;
   }
 
   async update(
@@ -45,14 +41,19 @@ export class CoursesService {
     return this.findOneById(id);
   }
 
-  async findOneById(id: number): Promise<Course> {
+  async findOneById(
+    id: number,
+    options?: { relations?: string[] },
+  ): Promise<Course> {
     const course = await this.courseRepository.findOne({
       where: { id },
-      relations: ['modules'],
+      relations: options?.relations || [],
     });
+
     if (!course) {
       throw new NotFoundException(`Course with ID ${id} not found`);
     }
+
     return course;
   }
 

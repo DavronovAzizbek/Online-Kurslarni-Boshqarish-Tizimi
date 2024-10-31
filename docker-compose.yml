@@ -1,38 +1,44 @@
-version: '3'
-services:
-  db:
-    image: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: azizbek002
-      POSTGRES_DB: exam
-    networks:
-      - ntSearch
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+version: "3.8"
 
-  backend:
-    build: .
-    image: exam
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=exam
-      - DATABASE_HOST=db
-      - DATABASE_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=azizbek002
-      - POSTGRES_DB=exam
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: azizbek002
+      POSTGRES_DB: exam
     depends_on:
       db:
         condition: service_healthy
     networks:
       - ntSearch
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: azizbek002
+      POSTGRES_DB: exam
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ntSearch
+
+volumes:
+  pgdata:
 
 networks:
   ntSearch:

@@ -21,6 +21,13 @@ export class AuthService {
   ) {}
 
   async registerAdmin(createAuthDto: CreateAuthDto) {
+    const existingUser = await this.userRepository.findOneBy({
+      email: createAuthDto.email,
+    });
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
+    }
+
     const user = this.userRepository.create({
       name: createAuthDto.name,
       email: createAuthDto.email,
@@ -52,6 +59,7 @@ export class AuthService {
 
   async login(loginDto: { email: string; password: string }) {
     const user = await this.userRepository.findOneBy({ email: loginDto.email });
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -60,23 +68,21 @@ export class AuthService {
       loginDto.password,
       user.password,
     );
+
     if (!isPasswordValid) {
       throw new UnauthorizedException('Incorrect password');
     }
 
     const payload = { id: user.id, email: user.email, role: user.role };
     const accessToken = this.jwtService.sign(payload);
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: '30d' });
 
     user.refreshToken = refreshToken;
     await this.userRepository.save(user);
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userData } = user;
     return {
       accessToken,
       refreshToken,
-      user: userData,
     };
   }
 
@@ -102,7 +108,8 @@ export class AuthService {
       });
 
       return { accessToken: newAccessToken };
-    } catch {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }

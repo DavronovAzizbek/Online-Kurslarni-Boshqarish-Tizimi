@@ -15,6 +15,7 @@ import { UpdateModuleDto } from './dto/update-module.dto';
 import { Modules } from './entities/module.entity';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
+import { Lesson } from 'src/lessons/entities/lesson.entity';
 
 @Controller('modules')
 export class ModuleController {
@@ -45,6 +46,20 @@ export class ModuleController {
     }
     const module = await this.moduleService.findOne(moduleId);
     return { message: 'Module retrieved successfully ✅', module };
+  }
+
+  @Get(':moduleId/lessons')
+  async findLessons(
+    @Param('moduleId') moduleId: string,
+  ): Promise<{ message: string; lessons: Lesson[] }> {
+    const moduleIdNumber = Number(moduleId);
+    if (isNaN(moduleIdNumber)) {
+      throw new NotFoundException(`Invalid Module ID: ${moduleId}`);
+    }
+
+    const lessons =
+      await this.moduleService.findLessonsByModuleId(moduleIdNumber);
+    return { message: 'Lessons retrieved successfully ✅', lessons };
   }
 
   @UseGuards(AuthGuard, RolesGuard)

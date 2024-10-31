@@ -10,6 +10,7 @@ import {
   JoinTable,
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
+import { Lesson } from 'src/lessons/entities/lesson.entity';
 
 @Entity()
 export class Course {
@@ -53,6 +54,9 @@ export class Course {
   modules: Modules[];
 
   @ManyToMany(() => User, (user) => user.courses)
-  @JoinTable() // JoinTable xususiyatini qo'shing
-  users: User[]; // courses xususiyati
+  @JoinTable()
+  users: User[];
+
+  @OneToMany(() => Lesson, (lesson) => lesson.module)
+  lessons: Lesson[];
 }

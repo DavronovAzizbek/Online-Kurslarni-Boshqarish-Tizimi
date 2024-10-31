@@ -26,17 +26,19 @@ export class LessonService {
     contentType,
     modulesId,
   }: CreateLessonDto): Promise<Lesson> {
-    const modules = await this.moduleRepository.findOneBy({ id: modulesId });
-    if (!modules)
-      throw new HttpException('Modules not found', HttpStatus.NOT_FOUND);
-    const lesson = await this.lessonRepository.create({
+    const module = await this.moduleRepository.findOneBy({ id: modulesId });
+    if (!module) {
+      throw new HttpException('Module not found', HttpStatus.NOT_FOUND);
+    }
+
+    const lesson = this.lessonRepository.create({
       title,
       content,
       contentType,
-      modules,
+      module,
     });
-    await this.lessonRepository.save(lesson);
-    return lesson;
+
+    return await this.lessonRepository.save(lesson);
   }
 
   async findAll(): Promise<Lesson[]> {
@@ -65,7 +67,7 @@ export class LessonService {
         );
       }
 
-      lesson.modules = moduleExists;
+      lesson.module = moduleExists;
     }
 
     Object.assign(lesson, updateLessonDto);
