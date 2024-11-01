@@ -1,3 +1,5 @@
+// auth.service.ts
+
 import {
   ConflictException,
   Injectable,
@@ -87,12 +89,15 @@ export class AuthService {
   }
 
   async getAllMyData(payload: any) {
-    return this.userRepository.findOneBy({ id: payload.id });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { refreshToken, password, ...userData } =
+      await this.userRepository.findOneBy({ id: payload.id });
+    return userData;
   }
 
   async refreshAccessToken(
     refreshToken: string,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ accessToken: string; newRefreshToken: string }> {
     try {
       const payload = this.jwtService.verify(refreshToken);
       const user = await this.userRepository.findOneBy({ id: payload.id });
@@ -107,21 +112,17 @@ export class AuthService {
         role: user.role,
       });
 
-      return { accessToken: newAccessToken };
+      const newRefreshToken = this.jwtService.sign(
+        { id: user.id },
+        { expiresIn: '30d' },
+      );
+      user.refreshToken = newRefreshToken;
+      await this.userRepository.save(user);
+
+      return { accessToken: newAccessToken, newRefreshToken };
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired refresh token');
-    }
-  }
-
-  async validateUser(token: string): Promise<User | null> {
-    try {
-      const payload = this.jwtService.verify(token);
-      const user = await this.usersService.findById(payload.id);
-      return user;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      return null;
     }
   }
 

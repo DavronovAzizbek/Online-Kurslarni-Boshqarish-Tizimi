@@ -1,3 +1,5 @@
+// auth.controller.ts
+
 import {
   Controller,
   Post,
@@ -5,7 +7,6 @@ import {
   Res,
   Req,
   UseGuards,
-  Headers,
   UnauthorizedException,
   Get,
   Delete,
@@ -13,7 +14,7 @@ import {
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { AuthGuard } from './auth.guard';
-import { Request } from 'express';
+import { Response, Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -32,10 +33,20 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() loginDto: { email: string; password: string },
-    @Res() res: any,
+    @Res() res: Response,
   ) {
-    const data = await this.authService.login(loginDto);
-    res.status(200).json({ data });
+    const { accessToken, refreshToken } =
+      await this.authService.login(loginDto);
+
+    // Refresh tokenni cookie ga saqlash
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // HTTPSda faqat productionda
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 kun
+    });
+
+    return res.status(200).json({ accessToken });
   }
 
   @UseGuards(AuthGuard)
@@ -46,25 +57,35 @@ export class AuthController {
 
   @UseGuards(AuthGuard)
   @Post('refresh-token')
-  async refreshAccessToken(
-    @Headers('authorization') authHeader: string,
-  ): Promise<{ accessToken: string }> {
-    const refreshToken = authHeader.split(' ')[1];
+  async refreshAccessToken(@Req() req: Request, @Res() res: Response) {
+    const refreshToken = req.cookies.refreshToken; // Cookie'dan refresh tokenni olish
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is missing ❌');
     }
-    return this.authService.refreshAccessToken(refreshToken);
+    const { accessToken, newRefreshToken } =
+      await this.authService.refreshAccessToken(refreshToken);
+
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({ accessToken });
   }
 
-  @UseGuards(AuthGuard)
   @Delete('logout')
-  async logout(
-    @Headers('authorization') authHeader: string,
-  ): Promise<{ message: string }> {
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-      throw new UnauthorizedException('Token is missing ❌');
+  async logout(@Res() res: Response, @Req() req: Request) {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is missing ❌');
     }
-    return this.authService.logout(token);
+
+    await this.authService.logout(refreshToken);
+
+    // Cookie dagi refresh tokenni o'chirish
+    res.clearCookie('refreshToken');
+    return res.status(200).json({ message: 'User logged out successfully' });
   }
 }
