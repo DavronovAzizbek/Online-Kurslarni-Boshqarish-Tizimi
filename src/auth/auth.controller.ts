@@ -1,34 +1,91 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+// auth.controller.ts
+
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Req,
+  UseGuards,
+  UnauthorizedException,
+  Get,
+  Delete,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { AuthGuard } from './auth.guard';
+import { Response, Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post()
-  create(@Body() createAuthDto: CreateAuthDto) {
-    return this.authService.create(createAuthDto);
+  @Post('register/admin')
+  async registerAdmin(@Body() createAuthDto: CreateAuthDto) {
+    return this.authService.registerAdmin(createAuthDto);
   }
 
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  @Post('register/user')
+  async registerUser(@Body() createAuthDto: CreateAuthDto) {
+    return this.authService.register(createAuthDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.authService.findOne(+id);
+  @Post('login')
+  async login(
+    @Body() loginDto: { email: string; password: string },
+    @Res() res: Response,
+  ) {
+    const { accessToken, refreshToken } =
+      await this.authService.login(loginDto);
+
+    // Refresh tokenni cookie ga saqlash
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // HTTPSda faqat productionda
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 kun
+    });
+
+    return res.status(200).json({ accessToken });
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuthDto: UpdateAuthDto) {
-    return this.authService.update(+id, updateAuthDto);
+  @UseGuards(AuthGuard)
+  @Get('me')
+  getMyData(@Req() req: Request) {
+    return this.authService.getAllMyData(req.user);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.authService.remove(+id);
+  @UseGuards(AuthGuard)
+  @Post('refresh-token')
+  async refreshAccessToken(@Req() req: Request, @Res() res: Response) {
+    const refreshToken = req.cookies.refreshToken; // Cookie'dan refresh tokenni olish
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is missing ❌');
+    }
+    const { accessToken, newRefreshToken } =
+      await this.authService.refreshAccessToken(refreshToken);
+
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({ accessToken });
+  }
+
+  @Delete('logout')
+  async logout(@Res() res: Response, @Req() req: Request) {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is missing ❌');
+    }
+
+    await this.authService.logout(refreshToken);
+
+    // Cookie dagi refresh tokenni o'chirish
+    res.clearCookie('refreshToken');
+    return res.status(200).json({ message: 'User logged out successfully' });
   }
 }

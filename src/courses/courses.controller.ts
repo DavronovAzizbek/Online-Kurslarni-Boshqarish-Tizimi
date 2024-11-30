@@ -1,34 +1,76 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Put,
+  Param,
+  Delete,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  Query,
+} from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseDto } from './dto/update-course.dto';
+import { Course } from './entities/course.entity';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.guard';
 
 @Controller('courses')
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
-  @Post()
-  create(@Body() createCourseDto: CreateCourseDto) {
-    return this.coursesService.create(createCourseDto);
-  }
-
   @Get()
-  findAll() {
-    return this.coursesService.findAll();
+  async findAll(): Promise<{ message: string; data: Course[] }> {
+    const courses = await this.coursesService.findAll();
+    return {
+      message: 'All courses retrieved successfully ✅',
+      data: courses,
+    };
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.coursesService.findOne(+id);
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  async create(
+    @Body() createCourseDto: CreateCourseDto,
+  ): Promise<{ message: string; data: Course }> {
+    const course = await this.coursesService.create(createCourseDto);
+    return {
+      message: 'Course created successfully ✅',
+      data: course,
+    };
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto) {
-    return this.coursesService.update(+id, updateCourseDto);
+  @Get('search')
+  async search(@Query('name') name: string): Promise<Course[]> {
+    return this.coursesService.searchCourses(name);
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
+  @Put(':id')
+  async update(
+    @Param('id') id: number,
+    @Body() updateCourseDto: Partial<CreateCourseDto>,
+  ): Promise<{ message: string; data: Course }> {
+    const updatedCourse = await this.coursesService.update(id, updateCourseDto);
+    return {
+      message: `Course with ID ${id} updated successfully ✅`,
+      data: updatedCourse,
+    };
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.coursesService.remove(+id);
+  async remove(@Param('id') id: number): Promise<{ message: string }> {
+    await this.coursesService.remove(id);
+    return {
+      message: `Course with ID ${id} deleted successfully ✅`,
+    };
   }
 }

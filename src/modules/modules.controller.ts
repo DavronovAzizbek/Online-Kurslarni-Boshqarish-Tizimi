@@ -1,34 +1,89 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ModulesService } from './modules.service';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  NotFoundException,
+} from '@nestjs/common';
+import { ModuleService } from './modules.service';
 import { CreateModuleDto } from './dto/create-module.dto';
 import { UpdateModuleDto } from './dto/update-module.dto';
+import { Modules } from './entities/module.entity';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Lesson } from 'src/lessons/entities/lesson.entity';
 
 @Controller('modules')
-export class ModulesController {
-  constructor(private readonly modulesService: ModulesService) {}
+export class ModuleController {
+  constructor(private readonly moduleService: ModuleService) {}
 
+  @UseGuards(AuthGuard, RolesGuard)
   @Post()
-  create(@Body() createModuleDto: CreateModuleDto) {
-    return this.modulesService.create(createModuleDto);
+  async create(
+    @Body() createModuleDto: CreateModuleDto,
+  ): Promise<{ message: string; module: Modules }> {
+    const module = await this.moduleService.create(createModuleDto);
+    return { message: 'Module created successfully ✅', module };
   }
 
   @Get()
-  findAll() {
-    return this.modulesService.findAll();
+  async findAll(): Promise<{ message: string; modules: Modules[] }> {
+    const modules = await this.moduleService.findAll();
+    return { message: 'All modules retrieved successfully ✅', modules };
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.modulesService.findOne(+id);
+  async findOne(
+    @Param('id') id: string,
+  ): Promise<{ message: string; module: Modules }> {
+    const moduleId = Number(id);
+    if (isNaN(moduleId)) {
+      throw new NotFoundException(`Invalid ID: ${id}`);
+    }
+    const module = await this.moduleService.findOne(moduleId);
+    return { message: 'Module retrieved successfully ✅', module };
   }
 
+  @Get(':moduleId/lessons')
+  async findLessons(
+    @Param('moduleId') moduleId: string,
+  ): Promise<{ message: string; lessons: Lesson[] }> {
+    const moduleIdNumber = Number(moduleId);
+    if (isNaN(moduleIdNumber)) {
+      throw new NotFoundException(`Invalid Module ID: ${moduleId}`);
+    }
+
+    const lessons =
+      await this.moduleService.findLessonsByModuleId(moduleIdNumber);
+    return { message: 'Lessons retrieved successfully ✅', lessons };
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateModuleDto: UpdateModuleDto) {
-    return this.modulesService.update(+id, updateModuleDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateModuleDto: UpdateModuleDto,
+  ): Promise<{ message: string; module: Modules }> {
+    const moduleId = Number(id);
+    if (isNaN(moduleId)) {
+      throw new NotFoundException(`Invalid ID: ${id}`);
+    }
+    const module = await this.moduleService.update(moduleId, updateModuleDto);
+    return { message: 'Module updated successfully ✅', module };
   }
 
+  @UseGuards(AuthGuard, RolesGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.modulesService.remove(+id);
+  async remove(@Param('id') id: string): Promise<{ message: string }> {
+    const moduleId = Number(id);
+    if (isNaN(moduleId)) {
+      throw new NotFoundException(`Invalid ID: ${id}`);
+    }
+    await this.moduleService.remove(moduleId);
+    return { message: 'Module deleted successfully ✅' };
   }
 }

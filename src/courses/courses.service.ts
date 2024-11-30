@@ -1,26 +1,67 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto';
-import { UpdateCourseDto } from './dto/update-course.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Course } from './entities/course.entity';
+import { Like, Repository } from 'typeorm';
 
 @Injectable()
 export class CoursesService {
-  create(createCourseDto: CreateCourseDto) {
-    return 'This action adds a new course';
+  constructor(
+    @InjectRepository(Course)
+    private courseRepository: Repository<Course>,
+  ) {}
+
+  async create(createCourseDto: CreateCourseDto): Promise<Course> {
+    const course = this.courseRepository.create(createCourseDto);
+    return this.courseRepository.save(course);
   }
 
-  findAll() {
-    return `This action returns all courses`;
+  async findAll(): Promise<Course[]> {
+    return this.courseRepository.find({ relations: ['modules'] });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} course`;
+  async searchCourses(nameFilter: string): Promise<Course[]> {
+    if (!nameFilter) {
+      return this.courseRepository.find(); // Agar filter bo'sh bo'lsa, barcha kurslarni qaytar
+    }
+    // Boshidan kelishi uchun LIKE shartini o'rnatamiz
+    const courses = await this.courseRepository.find({
+      where: {
+        name: Like(`${nameFilter}%`), // Faqat boshida keladiganlar
+      },
+    });
+    return courses;
   }
 
-  update(id: number, updateCourseDto: UpdateCourseDto) {
-    return `This action updates a #${id} course`;
+  async update(
+    id: number,
+    updateCourseDto: Partial<CreateCourseDto>,
+  ): Promise<Course> {
+    await this.courseRepository.update(id, updateCourseDto);
+    return this.findOneById(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} course`;
+  async findOneById(
+    id: number,
+    options?: { relations?: string[] },
+  ): Promise<Course> {
+    const course = await this.courseRepository.findOne({
+      where: { id },
+      relations: options?.relations || [],
+    });
+
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${id} not found`);
+    }
+
+    return course;
+  }
+
+  async remove(id: number): Promise<string> {
+    const result = await this.courseRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Course with ID ${id} not found`);
+    }
+    return `Course with ID ${id} successfully deleted`;
   }
 }
